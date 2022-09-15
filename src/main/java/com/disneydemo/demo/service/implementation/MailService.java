@@ -1,5 +1,6 @@
 package com.disneydemo.demo.service.implementation;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 
@@ -15,6 +16,9 @@ import com.sendgrid.SendGrid;
 
 @Service
 public class MailService {
+
+    @Value("${yourapp.http.auth-token}")
+    private String apiKey;
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
     public String sendTextEmail(String receiver) throws IOException {
@@ -25,8 +29,8 @@ public class MailService {
         Content content = new Content("text/plain", "Welcome to the Disney App!");
         Mail mail = new Mail(from, subject, to, content);
 
-        //for demonstrations reasons I'm just going to paste my api key here
-        SendGrid sg = new SendGrid("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");
+
+        SendGrid sg = new SendGrid(apiKey);
         Request request = new Request();
         try {
             request.setMethod(Method.POST);
