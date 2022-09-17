@@ -36,32 +36,41 @@ public class MovieController {
     @Autowired
     CharacterSerieService characterSerieService;
 
-
-
     @RequestMapping(path = "/movies", method = RequestMethod.POST)
     public ResponseEntity<Object> createMovie(
-            //@RequestBody Movie movie,
-            @RequestParam String title,
-            @RequestParam String img,
-            @RequestParam Double score,
-            @RequestParam Date creationDate,
-            @RequestParam("genreId") Long genreId,
-            @RequestParam("characters") List<Long> charactersId,
+            @RequestParam Optional<String> title,
+            @RequestParam Optional<String> img,
+            @RequestParam Optional<Double> score,
+            @RequestParam Optional<Date> creationDate,
+            @RequestParam("genreId") Optional<Long> genreId,
+            @RequestParam("characters") Optional<List<Long>> charactersId,
             Authentication authentication
     ){
-
-        if (score<0 || score<5){
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if(title.isEmpty()||img.isEmpty()||score.isEmpty()|| creationDate.isEmpty()||genreId.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Please send the required values"), HttpStatus.BAD_REQUEST);
+        if (score.get() < 0 || score.get() < 5){
             new ResponseEntity<>(DTO.makeMap("error","Please set the score with a value between 1 to 5"), HttpStatus.BAD_REQUEST);
         }
-
-        Movie movie = new Movie(img,title,creationDate,score);
-        Genre genre = genreService.findById(genreId);
+        Movie movie = new Movie(img.get(),title.get(),creationDate.get(),score.get());
+        Genre genre = genreService.findById(genreId.get());
         genre.addMovie(movie);
         movie.setGenre(genre);
 
+        List<Character> characters;
+        List<CharacterMovie> characterMovies;
 
-        List<Character> characters = characterService.findAllById(charactersId);
-        List<CharacterMovie> characterMovies = new ArrayList<CharacterMovie>();
+        if (charactersId.isEmpty())
+            characters = new ArrayList<>();
+        else {
+            characters = characterService.findAllById(charactersId.get());
+            characterMovies = new ArrayList<CharacterMovie>();
+        }
+
+        if (characters.isEmpty()){
+            return new ResponseEntity<>(DTO.MovieToDTO(movieService.saveMovie(movie)), HttpStatus.CREATED);
+        }
 
         characters.forEach(character -> {
            createCharacterMovie(character,movie);
@@ -81,17 +90,19 @@ public class MovieController {
                                                //@RequestBody Movie movie,
                                                Authentication authentication)
     {
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
 
-        Movie updatedMovie = movieService.findById(id.get());
+        Optional<Movie> updatedMovie = movieService.findById(id.get());
 
-        img.ifPresent(updatedMovie::setImg);
-        title.ifPresent(updatedMovie::setTitle);
-        score.ifPresent(updatedMovie::setScore);
-        creationDate.ifPresent(updatedMovie::setCreationDate);
-        genreId.ifPresent(aLong -> updatedMovie.setGenre(genreService.findById(aLong)));
+        img.ifPresent(updatedMovie.get()::setImg);
+        title.ifPresent(updatedMovie.get()::setTitle);
+        score.ifPresent(updatedMovie.get()::setScore);
+        creationDate.ifPresent(updatedMovie.get()::setCreationDate);
+        genreId.ifPresent(aLong -> updatedMovie.get().setGenre(genreService.findById(aLong)));
 
-        return new ResponseEntity<>(DTO.MovieToDTO(movieService.saveMovie(updatedMovie)), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(DTO.MovieToDTO(movieService.saveMovie(updatedMovie.get())), HttpStatus.ACCEPTED);
     }
 
     @RequestMapping(path = "/movies/{id}", method = RequestMethod.DELETE)
@@ -99,8 +110,10 @@ public class MovieController {
             @PathVariable Long id,
             Authentication authentication
     ){
-        if (movieService.findById(id) == null) {
-            return new ResponseEntity<>("Not Found", HttpStatus.OK);
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if (movieService.findById(id).isEmpty()) {
+            return new ResponseEntity<>("Not Found", HttpStatus.NOT_FOUND);
         }
         else{
             movieService.deleteMovie(id);
@@ -116,6 +129,8 @@ public class MovieController {
             @RequestParam Optional<String> order,
             Authentication authentication
     ){
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
 
         if (title.isPresent()) {
             return new ResponseEntity<>(DTO.MovieToDTO(movieService.findByTitle(title.get())), HttpStatus.FOUND);
@@ -135,66 +150,81 @@ public class MovieController {
 
     @RequestMapping(path = "/movies/{id}", method = RequestMethod.GET)
     public ResponseEntity<Object> detailMovie(
-            @PathVariable Long id,
+            @PathVariable Optional<Long> id,
             Authentication authentication
     ){
-        Movie movie = movieService.findById(id);
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
 
-        if (movie == null) {
+        Optional<Movie> movie = movieService.findById(id.get());
+
+        if (movie.isEmpty())
             return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(DTO.MovieToDTO(movie), HttpStatus.FOUND);
+
+        return new ResponseEntity<>(DTO.MovieToDTO(movie.get()), HttpStatus.FOUND);
     }
 
     @RequestMapping(path = "/movies/{idMovie}/characters/{idCharacter}", method = RequestMethod.POST)
     public ResponseEntity<Object> addCharacterToMovie(
-            @PathVariable("idMovie") Long idMovie,
-            @PathVariable("idCharacter") Long idCharacter,
+            @PathVariable("idMovie") Optional<Long> idMovie,
+            @PathVariable("idCharacter") Optional<Long> idCharacter,
             Authentication authentication
     ){
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if (idMovie.isEmpty() || idCharacter.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
 
-        Character character = characterService.findById(idCharacter);
-        Movie movie = movieService.findById(idMovie);
+        Optional<Character> character = characterService.findById(idCharacter.get());
+        Optional<Movie> movie = movieService.findById(idMovie.get());
 
-        return new ResponseEntity<>(DTO.CharacterMovieToDTO(createCharacterMovie(character,movie)), HttpStatus.CREATED);
+        if (character.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Character not found"), HttpStatus.NOT_FOUND);
+        if (movie.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Movie not found"), HttpStatus.NOT_FOUND);
+
+
+        return new ResponseEntity<>(DTO.MovieToDTO(createCharacterMovie(character.get(),movie.get()).getMovie()), HttpStatus.CREATED);
     }
 
     @RequestMapping(path = "/movies/{idMovie}/characters/{idCharacter}", method = RequestMethod.DELETE)
     public ResponseEntity<Object> deleteCharacterFromMovie(
-            @PathVariable("idMovie") Long idMovie,
-            @PathVariable("idCharacter") Long idCharacter,
+            @PathVariable("idMovie") Optional<Long> idMovie,
+            @PathVariable("idCharacter") Optional<Long> idCharacter,
             Authentication authentication
     ){
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if (idMovie.isEmpty() || idCharacter.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
 
-        Character character = characterService.findById(idCharacter);
-        Movie movie = movieService.findById(idMovie);
+        Optional<Character> character = characterService.findById(idCharacter.get());
+        Optional<Movie> movie = movieService.findById(idMovie.get());
 
+        if (character.isEmpty()||movie.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
 
-        CharacterMovie characterMovie =  movie.getCharacterMovies().stream().filter(
-                  cm -> cm.getCharacter().getId()==character.getId()
+        CharacterMovie characterMovie =  movie.get().getCharacterMovies().stream().filter(
+                  cm -> cm.getCharacter().getId()==character.get().getId()
         ).findFirst().get();
 
         characterSerieService.deleteCharacterSerie(characterMovie.getId());
 
-        movie.removeCharacterMovie(characterMovie);
-        character.removeCharacterMovie(characterMovie);
+        movie.get().removeCharacterMovie(characterMovie);
+        character.get().removeCharacterMovie(characterMovie);
 
-        return new ResponseEntity<>(DTO.CharacterMovieToDTO(movie), HttpStatus.CREATED);
+        return new ResponseEntity<>(DTO.MovieToDTO(movie.get()), HttpStatus.OK);
     }
 
-    private Movie createCharacterMovie(Character character, Movie movie){
-
-
+    private CharacterMovie createCharacterMovie(Character character, Movie movie){
 
         CharacterMovie characterMovie = new CharacterMovie(character,movie);
         movie.addCharacterMovie(characterMovie);
         character.addCharacterMovie(characterMovie);
 
-        movie = movieService.saveMovie(movie);
+        movieService.saveMovie(movie);
         characterService.saveCharacter(character);
 
-        characterSerieService.saveCharacterSerie(characterMovie);
-        return movie;
+        return characterSerieService.saveCharacterSerie(characterMovie);
     }
 
 }

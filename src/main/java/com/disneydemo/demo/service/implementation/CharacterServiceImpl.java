@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -31,15 +32,15 @@ public class CharacterServiceImpl implements CharacterService {
     public boolean existCharacter(Long id) { return characterRepository.findById(id).isPresent(); };
 
     @Override
-    public Character findById(Long id){ return characterRepository.findById(id).get(); };
+    public Optional<Character> findById(Long id){ return characterRepository.findById(id); };
 
     @Override
     public List<Character> findAll(){ return characterRepository.findAll(); };
 
     @Override
-    public Character deleteCharacter(Long id)
+    public Optional<Character> deleteCharacter(Long id)
     {
-        Character character = characterRepository.findById(id).get();
+        Optional<Character> character = characterRepository.findById(id);
         characterRepository.deleteById(id);
         return character;
     }

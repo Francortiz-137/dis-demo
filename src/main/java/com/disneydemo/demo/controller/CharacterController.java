@@ -25,19 +25,21 @@ public class CharacterController {
     @RequestMapping(path = "/characters", method = RequestMethod.POST)
     public ResponseEntity<Object> createCharacter(
             //@RequestBody Character character,
-            @RequestParam String name,
-            @RequestParam String img,
-            @RequestParam int age,
-            @RequestParam Double weight,
-            @RequestParam String story,
+            @RequestParam Optional<String> name,
+            @RequestParam Optional<String> img,
+            @RequestParam Optional<Integer> age,
+            @RequestParam Optional<Double> weight,
+            @RequestParam Optional<String> story,
             Authentication authentication
     ){
-        if(AuthController.isGuest(authentication)){
+        if(AuthController.isGuest(authentication))
             return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
-        }else {
-            Character newCharacter = characterService.saveCharacter(new Character(img,name,age,weight,story));
-            return new ResponseEntity<>(DTO.characterToDTO(newCharacter), HttpStatus.CREATED);
-        }
+        if (name.isEmpty()||img.isEmpty()||age.isEmpty()||weight.isEmpty()||story.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Please send the required values"), HttpStatus.BAD_REQUEST);
+
+        Character newCharacter = characterService.saveCharacter(new Character(img.get(),name.get(),age.get(),weight.get(),story.get()));
+        return new ResponseEntity<>(DTO.characterToDTO(newCharacter), HttpStatus.CREATED);
+
 
     }
 
@@ -51,33 +53,40 @@ public class CharacterController {
                                                   @RequestParam Optional<String> story,
             Authentication authentication)
     {
-        if(AuthController.isGuest(authentication)){
+        if(AuthController.isGuest(authentication))
             return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
-        }else {
-            if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.ACCEPTED);
 
-            Character updatedCharacter = characterService.findById(id.get());
-            updatedCharacter.setId(id.get());
-            img.ifPresent(updatedCharacter::setImg);
-            name.ifPresent(updatedCharacter::setName);
-            age.ifPresent(updatedCharacter::setAge);
-            weight.ifPresent(updatedCharacter::setWeight);
-            story.ifPresent(updatedCharacter::setStory);
-            return new ResponseEntity<>(DTO.characterToDTO(characterService.saveCharacter(updatedCharacter)), HttpStatus.ACCEPTED);
-        }
+        if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
+
+        Optional<Character> updatedCharacter = characterService.findById(id.get());
+
+        if (updatedCharacter.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","character not found"), HttpStatus.NOT_FOUND);
+
+        updatedCharacter.get().setId(id.get());
+        img.ifPresent(updatedCharacter.get()::setImg);
+        name.ifPresent(updatedCharacter.get()::setName);
+        age.ifPresent(updatedCharacter.get()::setAge);
+        weight.ifPresent(updatedCharacter.get()::setWeight);
+        story.ifPresent(updatedCharacter.get()::setStory);
+        return new ResponseEntity<>(DTO.characterToDTO(characterService.saveCharacter(updatedCharacter.get())), HttpStatus.ACCEPTED);
+
     }
 
     @RequestMapping(path = "/characters/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Object> deleteCharacter(
-            @PathVariable("id") Long id,
+            @PathVariable("id") Optional<Long> id,
             Authentication authentication
     ){
-        if(AuthController.isGuest(authentication)){
+        if(AuthController.isGuest(authentication))
             return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
-        }else {
-            Character character = characterService.deleteCharacter(id);
-            return new ResponseEntity<>(DTO.characterToDTO(character), HttpStatus.OK);
-        }
+        if (id.isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Id is required"), HttpStatus.BAD_REQUEST);
+        if(characterService.findById(id.get()).isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Character not Found"), HttpStatus.NOT_FOUND);
+        Optional<Character> character = characterService.deleteCharacter(id.get());
+        return new ResponseEntity<>(DTO.characterToDTO(character.get()), HttpStatus.OK);
+
     }
 
 
@@ -88,6 +97,8 @@ public class CharacterController {
             @RequestParam Optional<Long> idMovie,
             Authentication authentication
     ){
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
 
         if (name.isPresent()) {
             return new ResponseEntity<>(DTO.characterToDTO(characterService.findByName(name.get())), HttpStatus.FOUND);
@@ -103,14 +114,18 @@ public class CharacterController {
 
     @RequestMapping(path = "/characters/{id}", method = RequestMethod.GET)
     public ResponseEntity<Object> findCharacter(
-            @PathVariable Long id,
+            @PathVariable Optional<Long> id,
             Authentication authentication
     ){
-        Character character = characterService.findById(id);
+        if(AuthController.isGuest(authentication))
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.BAD_REQUEST);
 
-        if (character == null) {
+        Optional<Character> character = characterService.findById(id.get());
+
+        if (character.isEmpty()) {
             return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(DTO.characterToDTO(character), HttpStatus.FOUND);
+        return new ResponseEntity<>(DTO.characterToDTO(character.get()), HttpStatus.FOUND);
     }
 }

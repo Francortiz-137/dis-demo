@@ -34,7 +34,8 @@ Say what the step will be
 Download the project
 Install the dependencies in pom.xml with maven
 and run the project
-```
+```  
+To use the Sendgrid Api you need to add the api key as a enviroment variable called "API_KEY_SENDGRID"
 <!---
 End with an example of getting some data out of the system or using it for a little demo
 -->

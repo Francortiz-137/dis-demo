@@ -3,6 +3,7 @@ package com.disneydemo.demo.service;
 import com.disneydemo.demo.model.Movie;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MovieService {
 
@@ -14,7 +15,7 @@ public interface MovieService {
 
     boolean existMovie(Long id);
 
-    Movie findById(Long id);
+    Optional<Movie> findById(Long id);
 
     List<Movie> findAll();
 

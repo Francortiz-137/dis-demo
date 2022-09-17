@@ -3,6 +3,7 @@ package com.disneydemo.demo.service;
 import com.disneydemo.demo.model.Character;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CharacterService {
 
@@ -12,11 +13,11 @@ public interface CharacterService {
 
     boolean existCharacter(Long id);
 
-    Character findById(Long id);
+    Optional<Character> findById(Long id);
 
     List<Character> findAll();
 
-    Character deleteCharacter(Long id);
+    Optional<Character> deleteCharacter(Long id);
 
     Character findByName(String name);
 
