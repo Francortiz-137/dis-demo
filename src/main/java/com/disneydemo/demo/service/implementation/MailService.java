@@ -1,6 +1,5 @@
 package com.disneydemo.demo.service.implementation;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 
@@ -17,8 +16,8 @@ import com.sendgrid.SendGrid;
 @Service
 public class MailService {
 
-    @Value("${yourapp.http.auth-token}")
-    private String apiKey;
+
+    private String apiKey = System.getenv("API_KEY_SENDGRID");
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
     public String sendTextEmail(String receiver) throws IOException {

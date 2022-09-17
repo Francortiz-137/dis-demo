@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Optional;
+
 @RestController
 
 @RequestMapping("/api")
@@ -26,5 +29,18 @@ public class GenreController {
 
         Genre genre = genreService.saveGenre(new Genre(img, name));
         return new ResponseEntity<>(DTO.genreToDTO(genre), HttpStatus.CREATED);
+    }
+
+    @RequestMapping(path = "/genres", method = RequestMethod.GET)
+    public ResponseEntity<Object> readGenre(
+    ){
+
+        List<Genre> genres = genreService.findAll();
+
+        if (genres !=null && genres.isEmpty()){
+            return new ResponseEntity<>(DTO.makeMap("error","Not found"), HttpStatus.NOT_FOUND);
+        }
+
+        return new ResponseEntity<>(DTO.genresToDTO(genres), HttpStatus.FOUND);
     }
 }

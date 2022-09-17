@@ -6,6 +6,7 @@ import com.disneydemo.demo.service.CharacterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedList;
@@ -23,52 +24,60 @@ public class CharacterController {
 
     @RequestMapping(path = "/characters", method = RequestMethod.POST)
     public ResponseEntity<Object> createCharacter(
-            @RequestBody Character character
+            //@RequestBody Character character,
+            @RequestParam String name,
+            @RequestParam String img,
+            @RequestParam int age,
+            @RequestParam Double weight,
+            @RequestParam String story,
+            Authentication authentication
     ){
-        /*if(Util.isGuest(authentication)){
-            return new ResponseEntity<>(Util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if(AuthController.isGuest(authentication)){
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         }else {
-            Game game = gameService.saveGame(new Game(LocalDateTime.now()));
-            GamePlayer gamePlayer = gamePlayerService.saveGamePlayer(new GamePlayer(game, playerService.findByUserName(authentication.getName()),LocalDateTime.now()));
-            return new ResponseEntity<>((Util.makeMap("gpid",gamePlayer.getId())),HttpStatus.CREATED);
+            Character newCharacter = characterService.saveCharacter(new Character(img,name,age,weight,story));
+            return new ResponseEntity<>(DTO.characterToDTO(newCharacter), HttpStatus.CREATED);
         }
 
-         */
-        Character newCharacter = characterService.saveCharacter(character);
-        return new ResponseEntity<>(DTO.characterToDTO(newCharacter), HttpStatus.CREATED);
     }
 
     @RequestMapping(path = "/characters/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<Object> updateCharacter(@PathVariable Long id,
-            @RequestBody Character character)
+    public ResponseEntity<Object> updateCharacter(@PathVariable Optional<Long> id,
+            //@RequestBody Character character,
+                                                  @RequestParam Optional<String> name,
+                                                  @RequestParam Optional<String> img,
+                                                  @RequestParam Optional<Integer> age,
+                                                  @RequestParam Optional<Double> weight,
+                                                  @RequestParam Optional<String> story,
+            Authentication authentication)
     {
+        if(AuthController.isGuest(authentication)){
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        }else {
+            if (id.isEmpty()) return new ResponseEntity<>(DTO.makeMap("error","id is required"), HttpStatus.ACCEPTED);
 
-        Character updatedCharacter = characterService.findById(id);
-        updatedCharacter.setId(id);
-        updatedCharacter.setImg(character.getImg());
-        updatedCharacter.setName(character.getName());
-        updatedCharacter.setAge(character.getAge());
-        updatedCharacter.setWeight(character.getWeight());
-        updatedCharacter.setStory(character.getStory());
-
-        return new ResponseEntity<>(DTO.characterToDTO(characterService.saveCharacter(updatedCharacter)), HttpStatus.ACCEPTED);
+            Character updatedCharacter = characterService.findById(id.get());
+            updatedCharacter.setId(id.get());
+            img.ifPresent(updatedCharacter::setImg);
+            name.ifPresent(updatedCharacter::setName);
+            age.ifPresent(updatedCharacter::setAge);
+            weight.ifPresent(updatedCharacter::setWeight);
+            story.ifPresent(updatedCharacter::setStory);
+            return new ResponseEntity<>(DTO.characterToDTO(characterService.saveCharacter(updatedCharacter)), HttpStatus.ACCEPTED);
+        }
     }
 
     @RequestMapping(path = "/characters/{id}", method = RequestMethod.DELETE)
     public ResponseEntity<Object> deleteCharacter(
-            @PathVariable("id") Long id
+            @PathVariable("id") Long id,
+            Authentication authentication
     ){
-        /*if(Util.isGuest(authentication)){
-            return new ResponseEntity<>(Util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
+        if(AuthController.isGuest(authentication)){
+            return new ResponseEntity<>(DTO.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
         }else {
-            Game game = gameService.saveGame(new Game(LocalDateTime.now()));
-            GamePlayer gamePlayer = gamePlayerService.saveGamePlayer(new GamePlayer(game, playerService.findByUserName(authentication.getName()),LocalDateTime.now()));
-            return new ResponseEntity<>((Util.makeMap("gpid",gamePlayer.getId())),HttpStatus.CREATED);
+            Character character = characterService.deleteCharacter(id);
+            return new ResponseEntity<>(DTO.characterToDTO(character), HttpStatus.OK);
         }
-
-         */
-        Character character = characterService.deleteCharacter(id);
-        return new ResponseEntity<>(DTO.characterToDTO(character), HttpStatus.OK);
     }
 
 
@@ -76,17 +85,10 @@ public class CharacterController {
     public ResponseEntity<Object> findCharacter(
             @RequestParam Optional<String> name,
             @RequestParam Optional<Integer> age,
-            @RequestParam Optional<Long> idMovie
+            @RequestParam Optional<Long> idMovie,
+            Authentication authentication
     ){
-        /*if(Util.isGuest(authentication)){
-            return new ResponseEntity<>(Util.makeMap("error","Not Authorized"), HttpStatus.UNAUTHORIZED);
-        }else {
-            Game game = gameService.saveGame(new Game(LocalDateTime.now()));
-            GamePlayer gamePlayer = gamePlayerService.saveGamePlayer(new GamePlayer(game, playerService.findByUserName(authentication.getName()),LocalDateTime.now()));
-            return new ResponseEntity<>((Util.makeMap("gpid",gamePlayer.getId())),HttpStatus.CREATED);
-        }
 
-         */
         if (name.isPresent()) {
             return new ResponseEntity<>(DTO.characterToDTO(characterService.findByName(name.get())), HttpStatus.FOUND);
         }
@@ -97,5 +99,18 @@ public class CharacterController {
         } else{
             return new ResponseEntity<>(DTO.charactersToDTO(characterService.findAll()), HttpStatus.FOUND);
         }
+    }
+
+    @RequestMapping(path = "/characters/{id}", method = RequestMethod.GET)
+    public ResponseEntity<Object> findCharacter(
+            @PathVariable Long id,
+            Authentication authentication
+    ){
+        Character character = characterService.findById(id);
+
+        if (character == null) {
+            return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(DTO.characterToDTO(character), HttpStatus.FOUND);
     }
 }

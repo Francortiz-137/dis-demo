@@ -6,9 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 public class Movie {
@@ -27,19 +25,19 @@ public class Movie {
 
     private double score;
 
-    @OneToMany(mappedBy="movie", orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(cascade=CascadeType.ALL, mappedBy="movie", orphanRemoval = true, fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private List<CharacterMovie> characterMovies = new LinkedList<CharacterMovie>();
+    private Set<CharacterMovie> characterMovies = new HashSet<CharacterMovie>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="genre_id")
     private Genre genre;
 
-    public List<CharacterMovie> getCharacterMovies() {
+    public Set<CharacterMovie> getCharacterMovies() {
         return characterMovies;
     }
 
-    public void setCharacterMovies(List<CharacterMovie> characterMovies) {
+    public void setCharacterMovies(Set<CharacterMovie> characterMovies) {
         this.characterMovies = characterMovies;
     }
 

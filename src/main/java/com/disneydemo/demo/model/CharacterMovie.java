@@ -12,6 +12,7 @@ public class CharacterMovie {
     @GenericGenerator(name = "native", strategy = "native")
     private long id;
 
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="character_id")
     private Character character;

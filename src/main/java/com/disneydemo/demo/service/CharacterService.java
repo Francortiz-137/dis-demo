@@ -23,4 +23,6 @@ public interface CharacterService {
     List<Character> findByAge(Integer s);
 
     List<Character> findByMovie(Long aLong);
+
+    List<Character> findAllById(List<Long> charactersId);
 }

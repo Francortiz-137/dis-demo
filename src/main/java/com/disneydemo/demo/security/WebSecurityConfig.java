@@ -61,79 +61,10 @@ class WebSecurityConfig {
                 )
                 .httpBasic();
 
-        ;
-                /*
 
-                .and()
-                .formLogin(form -> form
-                        .loginPage("/auth/login")
-                        .permitAll()
-                );
-                */
-
-        /*
-
-                //.antMatchers("/").permitAll()
-                //.antMatchers("/api").permitAll()
-                //.antMatchers("/auth").permitAll()
-                .and()
-                //.formLogin()
-
-                //.loginPage("/auth/login")
-                .formLogin(
-                        form -> form
-                                .loginPage("/auth/login")
-                                .loginProcessingUrl("/auth/login")
-                //                .defaultSuccessUrl("/users")
-                                .usernameParameter("email")
-                                .passwordParameter("password")
-                                .permitAll()
-                )
-                .logout(
-                        logout -> logout
-                                .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"))
-                                .permitAll()
-
-                )
-        ;
-
-
-
-
-         */
-        // turn off checking for CSRF tokens
-        //http.csrf().disable();
-        /*
-        http.logout().logoutUrl("/auth/logout");
-
-
-
-        // if user is not authenticated, just send an authentication failure response
-        http.exceptionHandling().authenticationEntryPoint((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
-
-        // if login is successful, just clear the flags asking for authentication
-        http.formLogin().successHandler((req, res, auth) -> clearAuthenticationAttributes(req));
-
-        // if login fails, just send an authentication failure response
-        http.formLogin().failureHandler((req, res, exc) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED));
-
-        // if logout is successful, just send a success response
-        http.logout().logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler());
-
-
-         */
         return http.build();
     }
-/*
-    private void clearAuthenticationAttributes(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-        }
-    }
 
-
- */
     /*
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {

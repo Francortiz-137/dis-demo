@@ -6,66 +6,56 @@ import com.disneydemo.demo.model.Character;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class DTO {
 
     public static Map<String, Object> characterToDTO(Character character) {
-        /** Return character's information
+        /** Return character's information detail
          *
          */
-        /*
-        Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("id", game.getId());
-        dto.put("created", game.getGameDate());
-        dto.put("gamePlayers", game.getGamePlayers().stream()
-                .map(gamePlayer -> DTO.gamePlayersToDTO(gamePlayer))
-                .collect(toList()));
 
-        dto.put("scores",   game.getGamePlayers().stream()
-                .map(gp -> DTO.scoresToDTO(gp))
-                .collect(toList()));
-        return dto;
-
-         */
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id", character.getId());
         dto.put("img", character.getImg());
         dto.put("name", character.getName());
-
+        dto.put("age",character.getAge());
+        dto.put("weight",character.getWeight());
+        dto.put("story",character.getStory());
+        dto.put("movies",character.getCharacterMovies().stream().map(characterMovie -> characterSerieToDTO(characterMovie,"movie")).collect(toList()));
         return dto;
 
-    }
-
-    public static Map<String, Object> serieToDTO(Movie movie) {
-
-        Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("id", movie.getId());
-
-        return dto;
     }
 
     public static Map<String, Object> genreToDTO(Genre genre) {
 
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("id", genre.getId());
+        dto.put("name", genre.getName());
+        dto.put("img", genre.getImg());
 
         return dto;
     }
 
-    public static Map<String, Object> characterSerieToDTO(CharacterMovie characterMovie) {
+    public static Map<String, Object> characterSerieToDTO(CharacterMovie characterMovie,String option) {
 
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("id", characterMovie.getId());
-
+        if (option.equals("movie"))
+            dto.put("title",characterMovie.getMovie().getTitle());
+        else if (option.equals("character")) {
+            dto.put("name",characterMovie.getCharacter().getName());
+        }
         return dto;
     }
 
     public static Map<String, Object> charactersToDTO(List<Character> characters) {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         // TODO solo mostrar img y name
-        dto.put("characters", characters.stream().map(character -> characterToDTO(character)));
+        dto.put("characters", characters.stream()
+                .map(DTO::characterToDTO)
+                .collect(toList()));
         return dto;
     }
 
@@ -75,6 +65,9 @@ public class DTO {
         dto.put("img", movie.getImg());
         dto.put("date",movie.getCreationDate());
         dto.put("score",movie.getScore());
+        dto.put("characters",movie.getCharacterMovies().stream()
+                .map(characterMovie -> characterSerieToDTO(characterMovie,"character"))
+                .collect(toSet()));
         return dto;
     }
 
@@ -121,6 +114,14 @@ public class DTO {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("userName", disneyUser.getUserName());
         dto.put("email", disneyUser.getEmail());
+        return dto;
+    }
+
+    public static Object genresToDTO(List<Genre> genres) {
+        Map<String, Object> dto = new LinkedHashMap<String, Object>();
+        dto.put("genres", genres.stream()
+                .map(DTO::genreToDTO)
+                .collect(toList()));
         return dto;
     }
 }

@@ -61,4 +61,9 @@ public class CharacterServiceImpl implements CharacterService {
 
     }
 
+    @Override
+    public List<Character> findAllById(List<Long> charactersId) {
+        return characterRepository.findAllById(charactersId);
+    }
+
 }
