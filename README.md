@@ -39,7 +39,7 @@ To use the Sendgrid Api you need to add the api key as a enviroment variable cal
 <!---
 End with an example of getting some data out of the system or using it for a little demo
 -->
-You can send Requests to the endpoints using Postman or a similar service
+You can send Requests to the endpoints using Postman or a similar service, 
 the endpoints are detailed [here](https://documenter.getpostman.com/view/16082081/2s7YmuhjVv)
 
 ## Running the tests
