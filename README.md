@@ -28,8 +28,6 @@ SendGrid 4.0.1
 
 A step by step series of examples that tell you how to get a development env running
 
-Say what the step will be
-
 ```
 Download the project
 Install the dependencies in pom.xml with maven
@@ -44,7 +42,7 @@ the endpoints are detailed [here](https://documenter.getpostman.com/view/1608208
 
 ## Running the tests
 
-Currently, there is no test for this version
+Currently, there is no tests for this version
 
 <!---
 ### Break down into end-to-end tests
@@ -84,7 +82,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 -->
 ## Authors
 
-* **Franco Ortiz** [](https://github.com/)
+* [**Franco Ortiz**](https://github.com/Francortiz-137)
 
 <!---
 ## License
