@@ -203,15 +203,20 @@ public class MovieController {
         if (character.isEmpty()||movie.isEmpty())
             return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
 
+        if (movie.get().getCharacterMovies() == null || movie.get().getCharacterMovies().isEmpty())
+            return new ResponseEntity<>(DTO.makeMap("error","Not Found"), HttpStatus.NOT_FOUND);
+
         CharacterMovie characterMovie =  movie.get().getCharacterMovies().stream().filter(
                   cm -> cm.getCharacter().getId()==character.get().getId()
-        ).findFirst().get();
+        ).findAny().get();
 
         characterSerieService.deleteCharacterSerie(characterMovie.getId());
 
         movie.get().removeCharacterMovie(characterMovie);
         character.get().removeCharacterMovie(characterMovie);
 
+        movieService.saveMovie(movie.get());
+        characterService.saveCharacter(character.get());
         return new ResponseEntity<>(DTO.MovieToDTO(movie.get()), HttpStatus.OK);
     }
 
@@ -226,5 +231,4 @@ public class MovieController {
 
         return characterSerieService.saveCharacterSerie(characterMovie);
     }
-
 }
